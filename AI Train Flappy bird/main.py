@@ -4,20 +4,20 @@ import time
 import os
 import random
 
-# Kích thước màn hình
+#Screen size
 WIN_WIDTH = 500
 WIN_HEIGHT = 800
 
-# Màu sắc
+#Color
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-RED = (255, 0, 0)      # Màu chim
-GREEN = (0, 255, 0)    # Màu ống cống
-BLUE = (135, 206, 235) # Màu nền trời (Sky Blue)
+RED = (255, 0, 0)      # Bird color
+GREEN = (0, 255, 0)    # Pipe color
+BLUE = (135, 206, 235) # Sky Background (Sky Blue)
 
-pygame.font.init() # Khởi tạo font chữ
+pygame.font.init()
 
-# --- LỚP CHIM (BIRD) ---
+# BIRD
 class Bird:
     def __init__(self, x, y):
         self.x = x
@@ -37,7 +37,7 @@ class Bird:
         self.tick_count += 1
         d = self.vel * self.tick_count + 1.5 * self.tick_count**2
 
-        if d >= 16: d = 16
+        if d >= 16: d = 16 # Bird falling speed
         if d < 0: d -= 2
 
         self.y = self.y + d
@@ -46,10 +46,10 @@ class Bird:
     def draw(self, win):
         pygame.draw.rect(win, RED, self.rect)
 
-# --- LỚP ỐNG CỐNG (PIPE) ---
+# PIPE
 class Pipe:
-    GAP = 100
-    VEL = 10
+    GAP = 100 # Gap of pipe
+    VEL = 10 # Velocity of pipe
        
 
     def __init__(self, x):
@@ -82,7 +82,7 @@ class Pipe:
             return True
         return False
 
-# --- HÀM VẼ CHUNG ---
+# Main draw
 def draw_window(win, birds, pipes, score, gen=None):
     win.fill(BLUE)
 
@@ -92,19 +92,19 @@ def draw_window(win, birds, pipes, score, gen=None):
     for bird in birds:
         bird.draw(win)
 
-    # Vẽ điểm số
+    # Score
     font = pygame.font.SysFont("comicsans", 30)
     text = font.render(f"Score: {score}", 1, WHITE)
     win.blit(text, (WIN_WIDTH - 10 - text.get_width(), 10))
 
-    # Nếu là AI Mode thì vẽ thêm số Gen
+    # Gen Score
     if gen is not None:
         text_gen = font.render(f"Gen: {gen}", 1, WHITE)
         win.blit(text_gen, (10, 10))
 
     pygame.display.update()
 
-# --- CHẾ ĐỘ 1: AI TỰ CHƠI (GIỮ NGUYÊN) ---
+#AI play
 def eval_genomes(genomes, config):
     global GEN
     GEN += 1
@@ -178,7 +178,7 @@ def eval_genomes(genomes, config):
 
         draw_window(win, birds, pipes, score, GEN)
 
-# --- CHẾ ĐỘ 2: NGƯỜI TỰ CHƠI (MỚI) ---
+# Player play
 def play_game_human():
     bird = Bird(230, 350)
     pipes = [Pipe(600)]
@@ -194,20 +194,20 @@ def play_game_human():
                 run = False
                 pygame.quit()
                 quit()
-            # Bấm Space để nhảy
+            # Space to Jump
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE:
                     bird.jump()
 
         bird.move()
 
-        # Xử lý ống cống
+        # Pipe processing
         add_pipe = False
         rem = []
         for pipe in pipes:
             if pipe.collide(bird):
                 print(f"GAME OVER! Score: {score}")
-                run = False # Chết thì dừng game
+                run = False # Die = pause game
             
             if not pipe.passed and bird.x > pipe.x:
                 pipe.passed = True
@@ -224,17 +224,17 @@ def play_game_human():
         for r in rem:
             pipes.remove(r)
 
-        # Chạm đất hoặc bay quá cao
+        # hit the ground or fly too high
         if bird.y + bird.width >= 800 or bird.y < 0:
             print(f"GAME OVER! Score: {score}")
             run = False
 
-        draw_window(win, [bird], pipes, score) # Không truyền Gen
+        draw_window(win, [bird], pipes, score) # no transmission Gen
 
-    # Hết game thì chờ 2 giây rồi quay lại menu
+    # If end game, wait a momment and return to menu
     time.sleep(1)
 
-# --- MENU CHÍNH ---
+# Main menu
 def main_menu():
     global GEN
     GEN = 0
@@ -271,15 +271,16 @@ def main_menu():
             
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_1:
-                    # Chế độ AI
+                    # AI Mode
                     p = neat.Population(config)
                     p.add_reporter(neat.StdOutReporter(True))
                     p.add_reporter(neat.StatisticsReporter())
                     p.run(eval_genomes, 50)
                 
                 if event.key == pygame.K_2:
-                    # Chế độ Người chơi
+                    # Player Mode
                     play_game_human()
 
 if __name__ == "__main__":
+
     main_menu()
